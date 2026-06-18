@@ -114,3 +114,4 @@ Then I will explain what Github is, and Github Copilot. I will demonstrate how a
 * [X] NARA-090 Write presenter notes in `Slide_notes.md` for slide 9. Time: 1 minute. You may use the following text: How much does it costs? The software is free to download and has many open plugins. The Github Copilot basis version I think is free. I have a subscription of 10 euros per month that I pay out of my own pocket. The sofware and platforms are from Microsoft, just like our teams and all the other software the RIVM is using.
 
 
+* [X] DEPL_001 Deploy `Slides_TASK040.html` on my github. Make it as an open website. 
