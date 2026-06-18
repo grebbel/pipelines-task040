@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Automating Deployment Pipelines - RIVM Presentation</title>
+  <style>
+    :root {
+      --rh-blue: #007bc7;
+      --rh-dark-blue: #01689b;
+      --rh-green: #39870c;
+      --rh-mint-green: #76d2b6;
+      --rh-violet: #421451;
+      --rh-light-blue: #8fcae7;
+      --rh-orange: #e17000;
+      --rh-white: #ffffff;
+      --rh-black: #000000;
+      --rh-light-gray: #f0f0f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Work Sans", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 20% 20%, #d6eef9 0%, #b8dfee 38%, #9dd2e6 100%);
+      color: var(--rh-black);
+      min-height: 100vh;
+      padding: 10px;
+    }
+
+    .deck {
+      max-width: 1600px;
+      width: 98vw;
+      margin: 0 auto;
+      background: var(--rh-white);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+      border: 1px solid rgba(1, 104, 155, 0.25);
+      min-height: calc(100vh - 20px);
+    }
+
+    .deck-header {
+      background: linear-gradient(120deg, var(--rh-dark-blue), var(--rh-green));
+      color: var(--rh-white);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 5px solid var(--rh-orange);
+    }
+
+    .deck-title {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .slide-counter {
+      background: rgba(255, 255, 255, 0.16);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      min-width: 88px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .slides-wrap {
+      position: relative;
+      min-height: calc(100vh - 140px);
+      background:
+        linear-gradient(180deg, rgba(143, 202, 231, 0.08) 0%, rgba(143, 202, 231, 0) 55%),
+        var(--rh-white);
+    }
+
+    .slide {
+      display: none;
+      padding: 78px 56px 68px;
+      min-height: calc(100vh - 140px);
+      position: relative;
+      animation: fadeIn 250ms ease;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 230px;
+      height: 85px;
+      background-image: url("images/logo_rivm_short.png");
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-position: center;
+      pointer-events: none;
+      opacity: 0.95;
+    }
+
+    .slide::after {
+      content: "Inhoudelijk Afdelingsoverleg";
+      position: absolute;
+      left: 18px;
+      bottom: 14px;
+      font-size: 0.85rem;
+      color: #35596e;
+      letter-spacing: 0.2px;
+      pointer-events: none;
+    }
+
+    .slide.active {
+      display: grid;
+      gap: 24px;
+      align-content: start;
+    }
+
+    .slide h2 {
+      font-size: clamp(1.6rem, 2.7vw, 2.3rem);
+      line-height: 1.2;
+      color: var(--rh-dark-blue);
+      border-left: 8px solid var(--rh-blue);
+      padding-left: 16px;
+    }
+
+    .slide h3 {
+      font-size: clamp(1.1rem, 2vw, 1.45rem);
+      color: var(--rh-violet);
+      font-weight: 600;
+    }
+
+    .slide p,
+    .slide li,
+    .slide .note {
+      font-size: clamp(1rem, 1.35vw, 1.12rem);
+      line-height: 1.5;
+    }
+
+    ul {
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    li {
+      position: relative;
+      padding-left: 24px;
+    }
+
+    li::before {
+      content: "●";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--rh-green);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.95fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .two-col.image-emphasis {
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr);
+    }
+
+    .panel {
+      background: #f8fcfe;
+      border: 1px solid #d4e8f1;
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .panel h4 {
+      font-size: 1rem;
+      color: var(--rh-dark-blue);
+      margin-bottom: 8px;
+    }
+
+    .image-placeholder {
+      border: 2px dashed var(--rh-light-blue);
+      background:
+        linear-gradient(120deg, rgba(143, 202, 231, 0.16), rgba(118, 210, 182, 0.12));
+      border-radius: 14px;
+      min-height: 210px;
+      display: grid;
+      place-content: center;
+      text-align: center;
+      padding: 16px;
+      color: #204f69;
+      font-weight: 600;
+    }
+
+    .image-placeholder .small {
+      font-weight: 500;
+      font-size: 0.92rem;
+      margin-top: 6px;
+      color: #2f6a87;
+    }
+
+    .image-placeholder pre {
+      width: 100%;
+      max-height: 250px;
+      overflow: auto;
+      text-align: left;
+      white-space: pre-wrap;
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 0.76rem;
+      line-height: 1.3;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid #c8dde8;
+      border-radius: 10px;
+      padding: 10px;
+      color: #163d52;
+    }
+
+    .image-placeholder img {
+      max-width: 100%;
+      max-height: 280px;
+      height: auto;
+      object-fit: contain;
+      border-radius: 10px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+      background: #ffffff;
+    }
+
+    .image-placeholder.large-image img {
+      max-height: 540px;
+    }
+
+    .image-placeholder.big-image img {
+      max-height: 504px;
+    }
+
+    .image-placeholder.gauld-image img {
+      max-height: 560px;
+    }
+
+    .image-placeholder.xl-image img {
+      max-height: 1050px;
+    }
+
+    .image-placeholder.left-note {
+      place-content: start;
+      text-align: left;
+      justify-items: start;
+    }
+
+    .pipeline {
+      font-weight: 700;
+      color: var(--rh-dark-blue);
+      background: #eaf5fa;
+      border-left: 5px solid var(--rh-orange);
+      padding: 10px 12px;
+      border-radius: 8px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--rh-light-gray);
+      border-top: 1px solid #dde3e8;
+    }
+
+    .slide-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 46px;
+      height: 46px;
+      border-radius: 999px;
+      border: none;
+      display: grid;
+      place-items: center;
+      font-size: 1.45rem;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 20;
+      color: var(--rh-white);
+      background: rgba(1, 104, 155, 0.85);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+    }
+
+    .slide-nav:hover {
+      background: rgba(1, 104, 155, 1);
+    }
+
+    .slide-nav.prev-float {
+      left: 10px;
+    }
+
+    .slide-nav.next-float {
+      right: 10px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .prev-btn {
+      background: #d7ebf5;
+      color: #0e4d6b;
+    }
+
+    .next-btn {
+      background: var(--rh-orange);
+      color: var(--rh-white);
+    }
+
+    .progress {
+      flex: 1;
+      height: 8px;
+      background: #dce5ea;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 0 12px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 10%;
+      background: linear-gradient(90deg, var(--rh-blue), var(--rh-green));
+      transition: width 180ms ease;
+    }
+
+    .hint {
+      color: #426579;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .speaker-note {
+      border-top: 1px solid #d6e4ec;
+      padding-top: 12px;
+      color: #35596e;
+      font-size: 0.95rem;
+      font-style: italic;
+    }
+
+    .slide-references {
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1px solid #d6e4ec;
+      color: #35596e;
+      font-size: 0.76rem;
+      line-height: 1.35;
+    }
+
+    .slide-references p {
+      font-size: 0.76rem;
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+
+    .slide-references ul {
+      gap: 4px;
+    }
+
+    .slide-references li {
+      padding-left: 14px;
+      word-break: break-word;
+    }
+
+    .slide-references li::before {
+      font-size: 0.62rem;
+      line-height: 1.6;
+      color: #35596e;
+    }
+
+    .slide-references a {
+      color: #1d5f82;
+      text-decoration: none;
+      border-bottom: 1px dotted #1d5f82;
+    }
+
+    .slide-references a:hover {
+      color: #0b3f5b;
+      border-bottom-style: solid;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 920px) {
+      body {
+        padding: 4px;
+      }
+
+      .slide {
+        padding: 62px 20px 50px;
+        min-height: calc(100vh - 130px);
+      }
+
+      .slides-wrap {
+        min-height: calc(100vh - 130px);
+      }
+
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .hint {
+        display: none;
+      }
+
+      .slide-nav {
+        width: 38px;
+        height: 38px;
+        font-size: 1.1rem;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+
+      .deck {
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+      }
+
+      .deck-header,
+      .controls {
+        display: none;
+      }
+
+      .slides-wrap {
+        min-height: auto;
+      }
+
+      .slide {
+        display: block !important;
+        page-break-after: always;
+        min-height: 95vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck">
+    <header class="deck-header">
+      <div class="deck-title">Automating deployment pipelines with GitHub Copilot in Visual Studio Code</div>
+      <div class="slide-counter" id="slideCounter">1 / 11</div>
+    </header>
+
+    <button class="slide-nav prev-float" id="prevFloatBtn" type="button" aria-label="Previous slide">&#8249;</button>
+    <button class="slide-nav next-float" id="nextFloatBtn" type="button" aria-label="Next slide">&#8250;</button>
+
+    <section class="slides-wrap" id="slidesWrap">
+      <article class="slide active">
+        <h2>Welcome</h2>
+        <h3>Automating deployment pipelines with GitHub Copilot in Visual Studio Code</h3>
+        <ul>
+          <li>Presenter: Robert ten Hove</li>
+          <li>Organization: RIVM</li>
+          <li>Date: 15 june 2026</li>
+        </ul>
+        <div class="image-placeholder">
+          <img src="images/Vibe_coding_workflow.png" alt="Vibe coding workflow diagram">
+          <div class="small">Vibe coding workflow</div>
+        </div>
+      </article>
+
+      <article class="slide">
+        <h2>What is in it for you?</h2>
+        <h3>What this session gives you</h3>
+        <div class="two-col">
+          <ul>
+            <li>Insight: AI can raise team throughput when workflows are redesigned, not just when tools are added</li>
+            <li>Evidence: customer-support field experiment showed +15% productivity with AI support</li>
+            <li>Caveat: task-level gains do not automatically become organization-level value</li>
+            <li>RIVM implication: start with 1 or 2 high-volume workflows and measure outcomes</li>
+          </ul>
+          <div class="image-placeholder left-note">
+            <p><strong>Take into consideration:</strong></p>
+            <ul>
+              <li>Preparation time</li>
+              <li>Error rate</li>
+              <li>Reviewing &amp; Fact-checking</li>
+              <li>Reproducibility</li>
+            </ul>
+          </div>
+        </div>
+        <div class="slide-references">
+          <p>References</p>
+          <ul>
+            <li>Brynjolfsson, Li, Raymond (QJE 2025): <a href="https://businessdatasolutions.github.io/ai-wiki/sources/2026-04-28-brynjolfsson-li-raymond-generative-ai-at-work" target="_blank" rel="noopener noreferrer">https://businessdatasolutions.github.io/ai-wiki/sources/2026-04-28-brynjolfsson-li-raymond-generative-ai-at-work</a></li>
+            <li>Dutt, Chatterji et al. (2026): <a href="https://businessdatasolutions.github.io/ai-wiki/sources/2026-05-02-dutt-chatterji-ai-experimentation-to-transformation" target="_blank" rel="noopener noreferrer">https://businessdatasolutions.github.io/ai-wiki/sources/2026-05-02-dutt-chatterji-ai-experimentation-to-transformation</a></li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="slide">
+        <h2>AI discussion in context</h2>
+        <h3>AI has valid concerns, and real opportunities</h3>
+        <ul>
+          <li>Insight: capability is scaling faster than organizations can safely absorb</li>
+          <li>Evidence: 88% of organizations report AI use, but only a small minority report mature deployment</li>
+          <li>Caveat: adoption metrics can overstate operational readiness</li>
+          <li>RIVM implication: separate experimentation metrics from production-readiness metrics</li>
+        </ul>
+        <div class="image-placeholder big-image">
+          <img src="images/Slide_3.png" alt="Slide 3 AI discussion illustration">
+          <div class="small">Slide 3 visual</div>
+        </div>
+        <div class="slide-references">
+          <p>References</p>
+          <ul>
+            <li>AI Index Report 2026: <a href="https://businessdatasolutions.github.io/ai-wiki/sources/2026-04-30-ai-index-report-2026" target="_blank" rel="noopener noreferrer">https://businessdatasolutions.github.io/ai-wiki/sources/2026-04-30-ai-index-report-2026</a></li>
+            <li>MIT Sloan AI Maturity: <a href="https://businessdatasolutions.github.io/ai-wiki/sources/2026-04-28-mit-sloan-ai-maturity" target="_blank" rel="noopener noreferrer">https://businessdatasolutions.github.io/ai-wiki/sources/2026-04-28-mit-sloan-ai-maturity</a></li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="slide">
+        <h2>Why Vibe coding?</h2>
+        <h3>From expensive tools to flexible workflows</h3>
+        <div class="two-col image-emphasis">
+          <ul>
+            <li>Insight: we are at a practical inflection point for coding agents in daily work</li>
+            <li>Evidence: +12.2% speed, +25.1% task completion, +33.9% quality inside capability frontier</li>
+            <li>Caveat: outside the frontier, correctness can drop significantly</li>
+            <li>RIVM implication: apply AI first to verifiable tasks with clear pass/fail checks</li>
+          </ul>
+          <div class="image-placeholder large-image">
+            <img src="images/Slide_4.png" alt="Slide 4 workflow illustration">
+            <div class="small">Slide 4 visual</div>
+          </div>
+        </div>
+        <div class="slide-references">
+          <p>References</p>
+          <ul>
+            <li>Dell'Acqua et al. (jagged technological frontier): <a href="https://businessdatasolutions.github.io/ai-wiki/sources/2026-04-28-dellacqua-jagged-technological-frontier" target="_blank" rel="noopener noreferrer">https://businessdatasolutions.github.io/ai-wiki/sources/2026-04-28-dellacqua-jagged-technological-frontier</a></li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="slide">
+        <h2>Demo 1: E-learning in module 11</h2>
+        <h3>Practical example in the current project</h3>
+        <div class="two-col">
+          <div>
+            <ul>
+              <li>Open module and navigate to Laboratory diagnosis</li>
+              <li>Show interactive clinical case</li>
+              <li>Show progress and score recording in Moodle LMS</li>
+              <li>Highlight content, style, and script integration</li>
+            </ul>
+            <p class="note"><strong>Demo checkpoints:</strong> Start page, chapter navigation, interactive element, score update.</p>
+            <p class="note"><strong>Module start page:</strong> <a href="file:///Users/rtenhove/Documents/05_RIVM/07_TRAININGS/2025 CCHF_PCR/11_MODULE_1/index.html" target="_blank" rel="noopener noreferrer">/Users/rtenhove/Documents/05_RIVM/07_TRAININGS/2025 CCHF_PCR/11_MODULE_1/index.html</a></p>
+          </div>
+          <div class="image-placeholder big-image">
+            <img src="images/slide_5.png" alt="Module 11 illustration">
+            <div class="small">Module 11 visual</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="slide">
+        <h2>Demo 2: Personal AI-Wiki</h2>
+        <h3>Knowledge support for daily project work</h3>
+        <ul>
+          <li>This demo shows a personal AI knowledge wiki for fast retrieval of curated sources and practical insights</li>
+          <li>Use it to find evidence, concepts, and references that support work and implementation choices</li>
+          <li>It helps move from broad AI claims to source-backed decisions in day-to-day work</li>
+        </ul>
+        <p class="note"><strong>Website:</strong> <a href="https://businessdatasolutions.github.io/ai-wiki/" target="_blank" rel="noopener noreferrer">https://businessdatasolutions.github.io/ai-wiki/</a></p>
+        <div class="image-placeholder">
+          <img src="images/Slide_6.png" alt="Slide 6 AI-Wiki demo illustration">
+          <div class="small">Slide 6 visual</div>
+        </div>
+      </article>
+
+      <article class="slide">
+        <h2>Demo 3 GitHub Copilot in VS Code</h2>
+        <h3>How a task is executed live</h3>
+        <ul>
+          <li>Insight: biggest gains come from a governed loop, not one-shot prompting</li>
+          <li>Evidence: practitioner and vendor sources converge on harness plus evals plus human review</li>
+          <li>Caveat: unreviewed autonomous output increases rework and hidden errors</li>
+          <li>RIVM implication: standardize prompt -> draft -> human review -> test -> release</li>
+        </ul>
+        <div class="image-placeholder">
+          <pre>The doctor suspects infection with CCHF virus.
+In which stage is the patient most likely?
+Choose the suspeced clinical stage [from three buttons]:
+- Pre-hemorrhagic stage [correct]
+- Hemorrhagic stage
+- Convalescence (recovering)
+
+[After clicking one button, the buttons change colour to green for the right button or red from the wrong buttons. ]
+
+Plasma sample is send to the laboratory. The next morning the results arrive.
+What do you expect based on the patient's clinical stage?
+
+| Laboratory test           | Expected result                               | Rationale [is made visible after selection]                                                                 |
+|---------------------------|-----------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| RT PCR                    | Positive [correct] / Negative / Inconclusive  | Viremia peaks in the first week; NAAT is the primary diagnostic tool.                                       |
+| Viral Antigen (ELISA)     | Positive [correct] / Negative / Inconclusive  | Antigen is most detectable during high viremia in the first 5 days.                                         |
+| CCHFV IgM / IgG           | Positive / Negative [correct] / Inconclusive  | Antibodies are generally not detectable until day 4-7 of symptoms.                                          |
+| Platelet count            | High / Low / Inconclusive [correct]           | Declining platelets are observable even in the pre-haemorrhagic phase, BUT cannot be analysed from SERUM. . |
+| Liver enzymes (AST / ALT) | Elevated [correct] / decreased / Inconclusive | AST and ALT levels rise early due to hepatic involvement.                                                   |
+
+For each correct selection, the user receives 25 points. If all are correct, the user received a bonus of 50 points.</pre>
+          <div class="small">Paste this raw markdown at <a href="https://mdtotext.com/" target="_blank" rel="noopener noreferrer">https://mdtotext.com/</a> to explain Markdown.</div>
+        </div>
+        <div class="slide-references">
+          <p>References</p>
+          <ul>
+            <li>Chase, Agent Development Lifecycle: <a href="https://businessdatasolutions.github.io/ai-wiki/sources/2026-05-09-chase-agent-development-lifecycle" target="_blank" rel="noopener noreferrer">https://businessdatasolutions.github.io/ai-wiki/sources/2026-05-09-chase-agent-development-lifecycle</a></li>
+            <li>Anthropic, Managed Agents: <a href="https://businessdatasolutions.github.io/ai-wiki/sources/2026-05-07-anthropic-managed-agents-decoupling-brain-hands" target="_blank" rel="noopener noreferrer">https://businessdatasolutions.github.io/ai-wiki/sources/2026-05-07-anthropic-managed-agents-decoupling-brain-hands</a></li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="slide">
+        <h2>What else can we do?</h2>
+        <h3>Beyond this demo</h3>
+        <ul>
+          <li>Insight: document-heavy public-health workflows are practical AI targets now</li>
+          <li>Evidence: document-intelligence deployments report major cycle-time reductions</li>
+          <li>Caveat: many gains are vendor-reported and need local validation</li>
+          <li>RIVM implication: pilot one document workflow with strict quality targets and manual parallel checks</li>
+        </ul>
+        <div class="image-placeholder big-image">
+          <img src="images/Slide_8.png" alt="Slide 8 AI applications illustration">
+          <div class="small">Slide 8 visual</div>
+        </div>
+        <div class="slide-references">
+          <p>References</p>
+          <ul>
+            <li>Boussioux et al. (2024) Vol. 35, No. 5, 1589–1607</li>
+            <li>Barrett et al. (2024) Accepted for print</li>
+            <li>LandingAI touchpoint-to-outcome: <a href="https://businessdatasolutions.github.io/ai-wiki/sources/2026-05-26-landingai-touchpoint-to-outcome-front-office-processes" target="_blank" rel="noopener noreferrer">https://businessdatasolutions.github.io/ai-wiki/sources/2026-05-26-landingai-touchpoint-to-outcome-front-office-processes</a></li>
+            <li>Google Gemini File Search: <a href="https://businessdatasolutions.github.io/ai-wiki/sources/2026-05-05-google-gemini-file-search-multimodal" target="_blank" rel="noopener noreferrer">https://businessdatasolutions.github.io/ai-wiki/sources/2026-05-05-google-gemini-file-search-multimodal</a></li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="slide">
+        <h2>Cost and adoption</h2>
+        <h3>Practical costs and setup</h3>
+        <div class="two-col">
+          <ul>
+            <li>VS Code is free</li>
+            <li>Many extensions are free</li>
+            <li>Copilot has free and paid tiers</li>
+            <li>Owned by Microsoft (like the whole Rijksoverheid ecosystem)</li>
+          </ul>
+          <div class="image-placeholder xl-image">
+            <img src="images/Slide_9.png" alt="Slide 9 cost and adoption illustration">
+            <div class="small">Source: <a href="https://hai.stanford.edu/assets/files/ai_index_report_2026.pdf" target="_blank" rel="noopener noreferrer">AI Index Report 2026</a></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="slide">
+        <h2>Summary</h2>
+        <h3>Key takeaways from this session</h3>
+        <ul>
+          <li>Start with one concrete workflow and define baseline metrics first</li>
+          <li>Use Copilot to accelerate drafting, but keep human review and fact-checking mandatory</li>
+          <li>Scale only when quality is stable and responsibilities are explicit</li>
+          <li>Treat AI as a controlled productivity tool, not as autonomous decision-maker</li>
+        </ul>
+        <div class="panel">
+          <h4>Practical conclusion</h4>
+          <p>Pilot, measure, validate, and then expand in a controlled way.</p>
+        </div>
+        <div class="image-placeholder">
+          <img src="images/Vibe_coding_workflow.png" alt="Vibe coding workflow summary illustration">
+          <div class="small">Vibe coding workflow</div>
+        </div>
+      </article>
+
+      <article class="slide">
+        <h2>Thank you</h2>
+        <h3>Questions and next opportunities</h3>
+        <ul>
+          <li>Thank you for your attention</li>
+          <li>Which workflow at your team could be the next pilot?</li>
+          <li>What support do you need to start safely and effectively?</li>
+        </ul>
+        <div class="image-placeholder gauld-image">
+          <img src="images/Gauld.jpeg" alt="Thank-you closing visual">
+          <div class="small">Source: Cartoon by Tom Gauld</div>
+        </div>
+      </article>
+    </section>
+
+    <footer class="controls">
+      <div class="buttons">
+        <button class="prev-btn" id="prevBtn" type="button">Previous</button>
+        <button class="next-btn" id="nextBtn" type="button">Next</button>
+      </div>
+      <div class="progress" aria-label="Slide progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="hint">Keyboard: Left/Right or Space</div>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const slideCounter = document.getElementById('slideCounter');
+      const progressBar = document.getElementById('progressBar');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const prevFloatBtn = document.getElementById('prevFloatBtn');
+      const nextFloatBtn = document.getElementById('nextFloatBtn');
+      let index = 0;
+
+      function update() {
+        slides.forEach((slide, i) => {
+          slide.classList.toggle('active', i === index);
+        });
+
+        slideCounter.textContent = (index + 1) + ' / ' + slides.length;
+        progressBar.style.width = (((index + 1) / slides.length) * 100) + '%';
+
+        prevBtn.disabled = index === 0;
+        nextBtn.disabled = index === slides.length - 1;
+        prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
+        nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
+      }
+
+      function next() {
+        if (index < slides.length - 1) {
+          index += 1;
+          update();
+        }
+      }
+
+      function prev() {
+        if (index > 0) {
+          index -= 1;
+          update();
+        }
+      }
+
+      prevBtn.addEventListener('click', prev);
+      nextBtn.addEventListener('click', next);
+      prevFloatBtn.addEventListener('click', prev);
+      nextFloatBtn.addEventListener('click', next);
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') {
+          event.preventDefault();
+          next();
+        }
+        if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
+          event.preventDefault();
+          prev();
+        }
+      });
+
+      update();
+    })();
+  </script>
+</body>
+</html>

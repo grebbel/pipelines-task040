@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../07_TRAININGS/2025 CCHF_PCR/11_MODULE_1"
+		}
+	],
+	"settings": {
+		"chat.tools.terminal.autoApprove": {
+			"xxd": true,
+			"true": true,
+			"pdfinfo": true,
+			"command": true,
+			"mdls": true,
+			"gs": true,
+			"awk": true,
+			"seq": true,
+			"printf": true
+		}
+	}
+}
